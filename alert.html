@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Price Alerts — Obligasi.gov</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:#0d1117;--surface:#161b22;--surface2:#1c2128;--surface3:#22272e;
+  --border:#30363d;--border2:#3d444d;
+  --text:#e6edf3;--text2:#8b949e;--text3:#656d76;
+  --green:#3fb950;--red:#f85149;--blue:#58a6ff;
+  --amber:#d29922;--purple:#a371f7;--teal:#26d9a4;
+  --orange:#f0883e;
+  --idr:#f0a500;--usd:#58a6ff;
+  --r:6px;--r2:10px;--r3:14px
+}
+body{font-family:'Sora',sans-serif;background:var(--ink);color:var(--text);min-height:100vh;line-height:1.5;font-size:13px}
+
+/* HEADER */
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:15px;color:var(--text);display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo em{color:var(--idr);font-style:normal}
+.nav-links{display:flex;gap:4px;align-items:center}
+.nav-link{padding:6px 14px;border-radius:var(--r);font-size:12px;font-weight:600;color:var(--text2);text-decoration:none;transition:all .2s;border:1px solid transparent}
+.nav-link:hover{background:var(--surface3);color:var(--text)}
+.nav-link.active{background:rgba(88,166,255,.12);color:var(--blue);border-color:rgba(88,166,255,.25)}
+.hdr-right{display:flex;gap:10px;align-items:center}
+.last-upd{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r);cursor:pointer;font-size:12px;font-weight:600;font-family:'Sora',sans-serif;border:1px solid transparent;transition:all .2s;line-height:1;background:none}
+.btn-blue{background:var(--blue);color:#0d1117;border-color:var(--blue)}
+.btn-blue:hover{background:#79bfff}
+.btn-ghost{color:var(--text2);border-color:var(--border2)}
+.btn-ghost:hover{background:var(--surface3);color:var(--text)}
+.btn-reset{color:var(--red);border-color:rgba(248,81,73,.4)}
+.btn-reset:hover{background:rgba(248,81,73,.1)}
+.btn-sm{padding:5px 10px;font-size:11px}
+
+/* WRAP */
+.wrap{max-width:1400px;margin:0 auto;padding:20px 24px}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px}
+.metric-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px}
+.metric-val{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:600}
+.metric-sub{font-size:10px;color:var(--text3);margin-top:4px}
+.metric-val.hit{color:var(--amber)}
+.metric-val.watch{color:var(--blue)}
+.metric-val.idr{color:var(--idr)}
+.metric-val.usd{color:var(--usd)}
+
+/* TABS */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px}
+.tab{padding:9px 16px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text3);border-bottom:2px solid transparent;transition:all .2s;background:none;border-top:0;border-left:0;border-right:0;font-family:'Sora',sans-serif;white-space:nowrap}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tab:hover:not(.active){color:var(--text2)}
+.tbadge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;background:var(--surface3);border-radius:10px;font-size:10px;margin-left:5px;color:var(--text3)}
+.tab.active .tbadge{background:rgba(88,166,255,.15);color:var(--blue)}
+
+/* TABLE */
+.tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--surface2)}
+th{padding:9px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;border-bottom:1px solid var(--border)}
+td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:12px}
+tbody tr:last-child td{border-bottom:none}
+tbody tr{transition:background .12s}
+tbody tr:hover{background:var(--surface2)}
+.mono{font-family:'JetBrains Mono',monospace}
+.bond-code{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:12px;color:var(--blue)}
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.b-fr{background:rgba(163,113,247,.15);color:#a371f7;border:1px solid rgba(163,113,247,.25)}
+.b-ori{background:rgba(240,165,0,.12);color:#f0a500;border:1px solid rgba(240,165,0,.22)}
+.b-sr{background:rgba(38,217,164,.1);color:#26d9a4;border:1px solid rgba(38,217,164,.2)}
+.b-pbs{background:rgba(240,136,62,.1);color:#f0883e;border:1px solid rgba(240,136,62,.2)}
+.b-spn{background:rgba(139,148,158,.1);color:#8b949e;border:1px solid rgba(139,148,158,.2)}
+.b-indon{background:rgba(88,166,255,.12);color:#58a6ff;border:1px solid rgba(88,166,255,.22)}
+.b-indois{background:rgba(63,185,80,.1);color:#3fb950;border:1px solid rgba(63,185,80,.2)}
+.c-idr{color:var(--idr);font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700}
+.c-usd{color:var(--usd);font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700}
+
+/* STATUS BADGES */
+.status-hit{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:12px;font-size:10px;font-weight:700;background:rgba(210,153,34,.12);color:var(--amber);border:1px solid rgba(210,153,34,.28)}
+.status-watch{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:12px;font-size:10px;font-weight:700;background:var(--surface3);color:var(--text3);border:1px solid var(--border)}
+
+/* EMPTY */
+.empty{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-ico{font-size:36px;margin-bottom:10px;opacity:.4}
+
+/* MODALS */
+.overlay{display:none;position:fixed;inset:0;background:rgba(1,4,9,.82);z-index:500;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r3);padding:26px;width:min(440px,92vw);max-height:90vh;overflow-y:auto}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-title{font-size:15px;font-weight:700}
+.modal-close{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:2px;line-height:1}
+.modal-close:hover{color:var(--text)}
+.fgrp{margin-bottom:14px}
+.fgrp label{display:block;font-size:10px;color:var(--text3);margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.fgrp input,.fgrp select{width:100%;background:var(--ink);border:1px solid var(--border);border-radius:var(--r);padding:8px 11px;color:var(--text);font-size:13px;font-family:'Sora',sans-serif;outline:none;transition:border-color .2s}
+.fgrp input:focus,.fgrp select:focus{border-color:var(--blue)}
+.frow{display:flex;gap:12px}.frow .fgrp{flex:1}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+
+/* TOAST */
+#toast-container{position:fixed;bottom:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--surface3);border:1px solid var(--border2);border-radius:var(--r2);padding:11px 16px;font-size:12px;max-width:320px;animation:toastIn .3s ease;pointer-events:none}
+.toast.t-ok{border-color:rgba(63,185,80,.4);color:var(--green)}
+.toast.t-warn{border-color:rgba(210,153,34,.4);color:var(--amber)}
+.toast.t-info{border-color:rgba(88,166,255,.4);color:var(--blue)}
+@keyframes toastIn{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
+
+/* GAP */
+.gap{font-family:'JetBrains Mono',monospace;font-size:11px}
+.gap.pos{color:var(--green)}.gap.neg{color:var(--red)}
+
+/* RESPONSIVE */
+@media(max-width:1100px){.metrics{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:700px){.metrics{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div style="display:flex;align-items:center;gap:16px">
+    <a class="logo" href="govbond.html">Porto<em>Track</em> <span style="font-size:10px;color:var(--text3);font-weight:400">by MEMZO.DEV</span></a>
+    <nav class="nav-links">
+      <a class="nav-link" href="govbond.html">📊 Bonds</a>
+      <a class="nav-link" href="dashboard.html">📦 Portfolio</a>
+      <a class="nav-link active" href="alert.html">🔔 Alerts</a>
+    </nav>
+  </div>
+  <div class="hdr-right">
+    <span class="last-upd" id="lastUpd">—</span>
+    <button class="btn btn-blue" onclick="openModal('alertMod')">+ Tambah Alert</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- METRICS -->
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-lbl">Total Alert</div>
+      <div class="metric-val" id="mTotal">0</div>
+      <div class="metric-sub">terdaftar</div>
+    </div>
+    <div class="metric">
+      <div class="metric-lbl">Triggered</div>
+      <div class="metric-val hit" id="mTriggered">0</div>
+      <div class="metric-sub">target tercapai</div>
+    </div>
+    <div class="metric">
+      <div class="metric-lbl">Watching</div>
+      <div class="metric-val watch" id="mWatching">0</div>
+      <div class="metric-sub">menunggu</div>
+    </div>
+    <div class="metric">
+      <div class="metric-lbl">IDR Alerts</div>
+      <div class="metric-val idr" id="mIDR">0</div>
+      <div class="metric-sub">obligasi IDR</div>
+    </div>
+    <div class="metric">
+      <div class="metric-lbl">USD Alerts</div>
+      <div class="metric-val usd" id="mUSD">0</div>
+      <div class="metric-sub">obligasi USD</div>
+    </div>
+  </div>
+
+  <!-- FILTER TABS -->
+  <div class="tabs">
+    <button class="tab active" id="tabAll" onclick="setTab('all')">Semua <span class="tbadge" id="badgeAll">0</span></button>
+    <button class="tab" id="tabTriggered" onclick="setTab('triggered')">🔴 Triggered <span class="tbadge" id="badgeTriggered">0</span></button>
+    <button class="tab" id="tabWatching" onclick="setTab('watching')">👁 Watching <span class="tbadge" id="badgeWatching">0</span></button>
+  </div>
+
+  <!-- TABLE -->
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Kode Obligasi</th>
+          <th>Seri</th>
+          <th>CCY</th>
+          <th>Kondisi</th>
+          <th style="text-align:right">Target</th>
+          <th style="text-align:right">Harga Saat Ini (Bid)</th>
+          <th style="text-align:right">Gap</th>
+          <th>Status</th>
+          <th>Kupon</th>
+          <th>Jatuh Tempo</th>
+          <th style="text-align:center">Hapus</th>
+        </tr>
+      </thead>
+      <tbody id="alertBody"></tbody>
+    </table>
+    <div class="empty" id="alertEmpty" style="display:none">
+      <div class="empty-ico">🔔</div>
+      <div>Belum ada alert terdaftar.</div>
+      <div style="font-size:11px;margin-top:6px;color:var(--text3)">Klik <strong style="color:var(--blue)">+ Tambah Alert</strong> untuk membuat alert harga baru.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD ALERT MODAL -->
+<div class="overlay" id="alertMod" onclick="if(event.target===this)closeModal('alertMod')">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-title">🔔 Tambah Price Alert</span>
+      <button class="modal-close" onclick="closeModal('alertMod')">✕</button>
+    </div>
+    <div class="fgrp">
+      <label>Kode Obligasi</label>
+      <input type="text" id="aCode" list="bondDl" placeholder="contoh: FR0091" oninput="onAlertCodeInput()">
+      <datalist id="bondDl"></datalist>
+    </div>
+    <div id="aBondInfo" style="display:none;background:var(--ink);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:14px;font-size:11px;color:var(--text2);line-height:2"></div>
+    <div class="frow">
+      <div class="fgrp">
+        <label>Kondisi</label>
+        <select id="aCond">
+          <option value="above">↑ Naik di atas</option>
+          <option value="below">↓ Turun di bawah</option>
+        </select>
+      </div>
+      <div class="fgrp">
+        <label>Harga Target (%)</label>
+        <input type="number" id="aTarget" placeholder="100.00" step="0.01">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('alertMod')">Batal</button>
+      <button class="btn btn-blue" onclick="saveAlert()">💾 Simpan Alert</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+const BONDS_RAW = [
+// ── CCY: IDR | TENOR: < 3 Tahun ──
+{code:"FR0047",   type:"FR",   curr:"IDR", bid:104.20, offer:106.50, yieldBid:7.35, yieldOffer:5.96, coupon:10.000, issued:"30-08-2007", maturity:"15-02-2028", tenor:1.7},
+{code:"FR0056",   type:"FR",   curr:"IDR", bid:99.40,  offer:101.80, yieldBid:10.24,yieldOffer:2.38, coupon:8.375,  issued:"23-09-2010", maturity:"15-09-2026", tenor:0.3},
+{code:"FR0059",   type:"FR",   curr:"IDR", bid:99.40,  offer:101.70, yieldBid:7.65, yieldOffer:5.18, coupon:7.000,  issued:"15-09-2011", maturity:"15-05-2027", tenor:1.0},
+{code:"FR0064",   type:"FR",   curr:"IDR", bid:97.70,  offer:100.30, yieldBid:7.40, yieldOffer:5.96, coupon:6.125,  issued:"13-08-2012", maturity:"15-05-2028", tenor:2.0},
+{code:"FR0090",   type:"FR",   curr:"IDR", bid:97.80,  offer:100.00, yieldBid:7.73, yieldOffer:5.12, coupon:5.125,  issued:"08-07-2021", maturity:"15-04-2027", tenor:0.9},
+{code:"ORI023T3", type:"ORI",  curr:"IDR", bid:99.05,  offer:100.85, yieldBid:12.32,yieldOffer:-0.29,coupon:5.900,  issued:"26-07-2023", maturity:"15-07-2026", tenor:0.1},
+{code:"ORI024T3", type:"ORI",  curr:"IDR", bid:99.00,  offer:100.80, yieldBid:8.44, yieldOffer:3.87, coupon:6.100,  issued:"08-11-2023", maturity:"15-10-2026", tenor:0.4},
+{code:"ORI025T3", type:"ORI",  curr:"IDR", bid:98.15,  offer:99.95,  yieldBid:8.81, yieldOffer:6.22, coupon:6.250,  issued:"28-02-2024", maturity:"15-02-2027", tenor:0.7},
+{code:"ORI026T3", type:"ORI",  curr:"IDR", bid:98.85,  offer:100.65, yieldBid:7.16, yieldOffer:5.77, coupon:6.300,  issued:"30-10-2024", maturity:"15-10-2027", tenor:1.4},
+{code:"ORI027T3", type:"ORI",  curr:"IDR", bid:98.75,  offer:100.85, yieldBid:7.42, yieldOffer:6.09, coupon:6.650,  issued:"26-02-2025", maturity:"15-02-2028", tenor:1.7},
+{code:"ORI028T3", type:"ORI",  curr:"IDR", bid:96.95,  offer:98.75,  yieldBid:6.76, yieldOffer:5.91, coupon:5.350,  issued:"29-10-2025", maturity:"15-10-2028", tenor:2.4},
+{code:"ORI029T3", type:"ORI",  curr:"IDR", bid:97.50,  offer:99.50,  yieldBid:6.47, yieldOffer:5.64, coupon:5.450,  issued:"25-02-2026", maturity:"15-02-2029", tenor:2.7},
+{code:"PBS032",   type:"PBS",  curr:"IDR", bid:98.90,  offer:101.20, yieldBid:12.75,yieldOffer:-3.70,coupon:4.875,  issued:"29-07-2021", maturity:"15-07-2026", tenor:0.1},
+{code:"SR018T5",  type:"SR",   curr:"IDR", bid:99.85,  offer:101.65, yieldBid:6.47, yieldOffer:5.39, coupon:6.400,  issued:"05-04-2023", maturity:"10-03-2028", tenor:1.8},
+{code:"SR019T3",  type:"SR",   curr:"IDR", bid:99.05,  offer:100.85, yieldBid:8.90, yieldOffer:2.90, coupon:5.950,  issued:"27-09-2023", maturity:"10-09-2026", tenor:0.3},
+{code:"SR020T3",  type:"SR",   curr:"IDR", bid:98.90,  offer:100.90, yieldBid:7.68, yieldOffer:5.05, coupon:6.300,  issued:"03-04-2024", maturity:"10-03-2027", tenor:0.8},
+{code:"SR021T3",  type:"SR",   curr:"IDR", bid:98.75,  offer:100.75, yieldBid:7.36, yieldOffer:5.70, coupon:6.350,  issued:"25-09-2024", maturity:"10-09-2027", tenor:1.3},
+{code:"SR022T3",  type:"SR",   curr:"IDR", bid:99.65,  offer:101.65, yieldBid:6.63, yieldOffer:5.57, coupon:6.450,  issued:"25-06-2025", maturity:"10-06-2028", tenor:2.1},
+{code:"SR023T3",  type:"SR",   curr:"IDR", bid:96.80,  offer:98.60,  yieldBid:7.29, yieldOffer:6.43, coupon:5.800,  issued:"22-09-2025", maturity:"10-10-2028", tenor:2.4},
+{code:"SR024T3",  type:"SR",   curr:"IDR", bid:96.95,  offer:99.15,  yieldBid:6.77, yieldOffer:5.88, coupon:5.550,  issued:"22-04-2026", maturity:"10-03-2029", tenor:2.8},
+// ── CCY: IDR | TENOR: 3–5 Tahun ──
+{code:"FR0071",   type:"FR",   curr:"IDR", bid:104.85, offer:107.35, yieldBid:7.06, yieldOffer:6.10, coupon:9.000,  issued:"12-09-2013", maturity:"15-03-2029", tenor:2.8},
+{code:"FR0078",   type:"FR",   curr:"IDR", bid:102.70, offer:105.70, yieldBid:7.22, yieldOffer:6.12, coupon:8.250,  issued:"27-09-2018", maturity:"15-05-2029", tenor:3.0},
+{code:"FR0095",   type:"FR",   curr:"IDR", bid:98.30,  offer:100.70, yieldBid:7.21, yieldOffer:6.03, coupon:6.375,  issued:"19-08-2022", maturity:"15-08-2028", tenor:2.2},
+{code:"FR0099",   type:"FR",   curr:"IDR", bid:98.35,  offer:100.75, yieldBid:7.08, yieldOffer:6.18, coupon:6.625,  issued:"16-03-2023", maturity:"15-03-2029", tenor:2.8},
+{code:"FR0101",   type:"FR",   curr:"IDR", bid:99.50,  offer:101.90, yieldBid:7.07, yieldOffer:6.14, coupon:6.875,  issued:"02-11-2023", maturity:"15-04-2029", tenor:2.9},
+{code:"ORI023T6", type:"ORI",  curr:"IDR", bid:98.30,  offer:100.10, yieldBid:6.71, yieldOffer:6.06, coupon:6.100,  issued:"26-07-2023", maturity:"15-07-2029", tenor:3.2},
+{code:"ORI024T6", type:"ORI",  curr:"IDR", bid:98.75,  offer:100.55, yieldBid:6.76, yieldOffer:6.15, coupon:6.350,  issued:"08-11-2023", maturity:"15-10-2029", tenor:3.4},
+{code:"ORI025T6", type:"ORI",  curr:"IDR", bid:97.90,  offer:99.70,  yieldBid:7.05, yieldOffer:6.48, coupon:6.400,  issued:"28-02-2024", maturity:"15-02-2030", tenor:3.7},
+{code:"PBS030",   type:"PBS",  curr:"IDR", bid:97.40,  offer:99.80,  yieldBid:7.20, yieldOffer:5.97, coupon:5.875,  issued:"04-06-2021", maturity:"15-07-2028", tenor:2.2},
+{code:"PBSG001",  type:"PBS",  curr:"IDR", bid:99.60,  offer:101.85, yieldBid:6.76, yieldOffer:6.00, coupon:6.625,  issued:"22-09-2022", maturity:"15-09-2029", tenor:3.3},
+{code:"SR019T5",  type:"SR",   curr:"IDR", bid:98.70,  offer:100.60, yieldBid:6.71, yieldOffer:5.80, coupon:6.100,  issued:"27-09-2023", maturity:"10-09-2028", tenor:2.3},
+{code:"SR020T5",  type:"SR",   curr:"IDR", bid:98.95,  offer:100.75, yieldBid:6.81, yieldOffer:6.09, coupon:6.400,  issued:"03-04-2024", maturity:"10-03-2029", tenor:2.8},
+{code:"SR021T5",  type:"SR",   curr:"IDR", bid:98.75,  offer:100.75, yieldBid:6.87, yieldOffer:6.18, coupon:6.450,  issued:"25-09-2024", maturity:"10-09-2029", tenor:3.3},
+{code:"SR022T5",  type:"SR",   curr:"IDR", bid:98.90,  offer:100.90, yieldBid:6.87, yieldOffer:6.29, coupon:6.550,  issued:"25-06-2025", maturity:"10-06-2030", tenor:4.1},
+{code:"SR023T5",  type:"SR",   curr:"IDR", bid:96.40,  offer:98.40,  yieldBid:6.92, yieldOffer:6.37, coupon:5.950,  issued:"22-09-2025", maturity:"10-10-2030", tenor:4.4},
+{code:"SR024T5",  type:"SR",   curr:"IDR", bid:96.65,  offer:98.85,  yieldBid:6.73, yieldOffer:6.18, coupon:5.900,  issued:"22-04-2026", maturity:"10-03-2031", tenor:4.8},
+// ── CCY: IDR | TENOR: 5–10 Tahun ──
+{code:"FR0054",   type:"FR",   curr:"IDR", bid:111.25, offer:113.55, yieldBid:6.86, yieldOffer:6.36, coupon:9.500,  issued:"22-07-2010", maturity:"15-07-2031", tenor:5.2},
+{code:"FR0058",   type:"FR",   curr:"IDR", bid:106.20, offer:108.50, yieldBid:6.98, yieldOffer:6.53, coupon:8.250,  issued:"21-07-2011", maturity:"15-06-2032", tenor:6.1},
+{code:"FR0065",   type:"FR",   curr:"IDR", bid:97.65,  offer:100.25, yieldBid:7.06, yieldOffer:6.58, coupon:6.625,  issued:"30-08-2012", maturity:"15-05-2033", tenor:7.0},
+{code:"FR0068",   type:"FR",   curr:"IDR", bid:108.00, offer:110.40, yieldBid:7.02, yieldOffer:6.64, coupon:8.375,  issued:"01-08-2013", maturity:"15-03-2034", tenor:7.8},
+{code:"FR0073",   type:"FR",   curr:"IDR", bid:107.05, offer:109.75, yieldBid:7.04, yieldOffer:6.43, coupon:8.750,  issued:"06-08-2015", maturity:"15-05-2031", tenor:5.0},
+{code:"FR0082",   type:"FR",   curr:"IDR", bid:100.65, offer:103.05, yieldBid:6.91, yieldOffer:6.46, coupon:7.000,  issued:"09-08-2018", maturity:"15-09-2030", tenor:4.3},
+{code:"FR0087",   type:"FR",   curr:"IDR", bid:97.35,  offer:99.85,  yieldBid:6.93, yieldOffer:6.54, coupon:6.500,  issued:"07-08-2020", maturity:"15-02-2031", tenor:4.7},
+{code:"FR0091",   type:"FR",   curr:"IDR", bid:97.00,  offer:99.50,  yieldBid:6.89, yieldOffer:6.55, coupon:6.375,  issued:"11-11-2021", maturity:"15-04-2032", tenor:5.9},
+{code:"FR0096",   type:"FR",   curr:"IDR", bid:100.10, offer:102.60, yieldBid:6.97, yieldOffer:6.60, coupon:7.000,  issued:"16-02-2023", maturity:"15-02-2033", tenor:6.7},
+{code:"FR0100",   type:"FR",   curr:"IDR", bid:97.00,  offer:99.50,  yieldBid:7.06, yieldOffer:6.71, coupon:6.625,  issued:"21-09-2023", maturity:"15-02-2034", tenor:7.7},
+{code:"FR0104",   type:"FR",   curr:"IDR", bid:97.25,  offer:99.75,  yieldBid:6.90, yieldOffer:6.58, coupon:6.500,  issued:"08-08-2024", maturity:"15-07-2030", tenor:4.1},
+{code:"FR0109",   type:"FR",   curr:"IDR", bid:97.00,  offer:99.50,  yieldBid:6.88, yieldOffer:6.57, coupon:6.500,  issued:"20-03-2025", maturity:"15-03-2031", tenor:4.8},
+{code:"ORI026T6", type:"ORI",  curr:"IDR", bid:97.45,  offer:99.25,  yieldBid:6.85, yieldOffer:6.55, coupon:6.400,  issued:"30-10-2024", maturity:"15-10-2030", tenor:4.4},
+{code:"ORI027T6", type:"ORI",  curr:"IDR", bid:97.10,  offer:98.90,  yieldBid:7.20, yieldOffer:6.78, coupon:6.800,  issued:"26-02-2025", maturity:"15-02-2031", tenor:4.7},
+{code:"ORI028T6", type:"ORI",  curr:"IDR", bid:95.80,  offer:97.60,  yieldBid:6.65, yieldOffer:6.22, coupon:5.550,  issued:"29-10-2025", maturity:"15-10-2031", tenor:5.4},
+{code:"ORI029T6", type:"ORI",  curr:"IDR", bid:95.90,  offer:97.70,  yieldBid:6.53, yieldOffer:6.11, coupon:5.550,  issued:"25-02-2026", maturity:"15-02-2032", tenor:5.7},
+{code:"PBS028",   type:"PBS",  curr:"IDR", bid:99.60,  offer:102.10, yieldBid:7.20, yieldOffer:6.65, coupon:7.375,  issued:"06-05-2021", maturity:"15-06-2031", tenor:5.1},
+{code:"PBS034",   type:"PBS",  curr:"IDR", bid:97.00,  offer:99.50,  yieldBid:7.05, yieldOffer:6.62, coupon:6.625,  issued:"05-05-2022", maturity:"15-05-2032", tenor:6.0},
+{code:"PBS038",   type:"PBS",  curr:"IDR", bid:97.10,  offer:99.60,  yieldBid:6.95, yieldOffer:6.58, coupon:6.625,  issued:"11-05-2023", maturity:"15-05-2033", tenor:7.0},
+{code:"PBS039",   type:"PBS",  curr:"IDR", bid:97.40,  offer:99.90,  yieldBid:7.01, yieldOffer:6.63, coupon:6.750,  issued:"10-08-2023", maturity:"15-08-2033", tenor:7.2},
+// ── CCY: IDR | TENOR: 10–15 Tahun ──
+{code:"FR0050",   type:"FR",   curr:"IDR", bid:120.25, offer:122.75, yieldBid:7.16, yieldOffer:6.88, coupon:10.500, issued:"11-02-2010", maturity:"15-07-2038", tenor:12.2},
+{code:"FR0052",   type:"FR",   curr:"IDR", bid:115.80, offer:118.30, yieldBid:7.14, yieldOffer:6.90, coupon:10.500, issued:"12-08-2010", maturity:"15-08-2030", tenor:4.2},
+{code:"FR0074",   type:"FR",   curr:"IDR", bid:101.90, offer:104.40, yieldBid:7.25, yieldOffer:6.95, coupon:7.500,  issued:"07-08-2015", maturity:"15-08-2032", tenor:6.2},
+{code:"FR0080",   type:"FR",   curr:"IDR", bid:100.00, offer:102.50, yieldBid:7.50, yieldOffer:7.12, coupon:7.500,  issued:"30-07-2018", maturity:"15-06-2035", tenor:9.1},
+{code:"FR0088",   type:"FR",   curr:"IDR", bid:92.50,  offer:95.00,  yieldBid:7.20, yieldOffer:6.93, coupon:6.250,  issued:"19-02-2021", maturity:"15-06-2036", tenor:10.1},
+{code:"FR0092",   type:"FR",   curr:"IDR", bid:97.80,  offer:100.30, yieldBid:7.18, yieldOffer:6.87, coupon:6.875,  issued:"11-11-2021", maturity:"15-06-2042", tenor:16.1},
+{code:"FR0097",   type:"FR",   curr:"IDR", bid:97.10,  offer:99.60,  yieldBid:7.35, yieldOffer:7.08, coupon:7.125,  issued:"02-03-2023", maturity:"15-06-2043", tenor:17.1},
+{code:"FR0098",   type:"FR",   curr:"IDR", bid:98.60,  offer:101.10, yieldBid:7.28, yieldOffer:7.00, coupon:7.125,  issued:"22-06-2023", maturity:"15-06-2038", tenor:12.1},
+{code:"FR0103",   type:"FR",   curr:"IDR", bid:97.40,  offer:99.90,  yieldBid:7.12, yieldOffer:6.84, coupon:6.750,  issued:"08-08-2024", maturity:"15-07-2035", tenor:9.2},
+{code:"FR0106",   type:"FR",   curr:"IDR", bid:98.60,  offer:101.10, yieldBid:7.18, yieldOffer:6.88, coupon:7.000,  issued:"14-11-2024", maturity:"15-08-2040", tenor:14.2},
+{code:"FR0107",   type:"FR",   curr:"IDR", bid:99.35,  offer:101.85, yieldBid:7.19, yieldOffer:6.92, coupon:7.125,  issued:"06-02-2025", maturity:"15-08-2045", tenor:19.2},
+{code:"FR0108",   type:"FR",   curr:"IDR", bid:95.60,  offer:98.10,  yieldBid:7.02, yieldOffer:6.77, coupon:6.500,  issued:"10-04-2025", maturity:"15-04-2036", tenor:9.9},
+{code:"PBS040",   type:"PBS",  curr:"IDR", bid:97.30,  offer:99.80,  yieldBid:7.15, yieldOffer:6.80, coupon:6.875,  issued:"07-12-2023", maturity:"15-11-2033", tenor:7.5},
+{code:"PBS042",   type:"PBS",  curr:"IDR", bid:97.50,  offer:100.00, yieldBid:7.20, yieldOffer:6.90, coupon:7.000,  issued:"08-08-2024", maturity:"15-07-2035", tenor:9.2},
+// ── CCY: IDR | TENOR: 15–30 Tahun ──
+{code:"FR0045",   type:"FR",   curr:"IDR", bid:116.85, offer:119.35, yieldBid:7.30, yieldOffer:7.07, coupon:9.750,  issued:"21-05-2008", maturity:"15-05-2037", tenor:11.0},
+{code:"FR0057",   type:"FR",   curr:"IDR", bid:113.60, offer:116.10, yieldBid:7.38, yieldOffer:7.15, coupon:9.500,  issued:"20-05-2010", maturity:"15-05-2041", tenor:15.0},
+{code:"FR0062",   type:"FR",   curr:"IDR", bid:93.05,  offer:95.55,  yieldBid:7.10, yieldOffer:6.90, coupon:6.375,  issued:"26-07-2012", maturity:"15-04-2042", tenor:15.9},
+{code:"FR0067",   type:"FR",   curr:"IDR", bid:113.60, offer:116.10, yieldBid:7.30, yieldOffer:7.07, coupon:8.750,  issued:"06-08-2014", maturity:"15-02-2044", tenor:17.7},
+{code:"FR0072",   type:"FR",   curr:"IDR", bid:103.70, offer:106.20, yieldBid:7.72, yieldOffer:7.54, coupon:8.250,  issued:"10-08-2017", maturity:"15-05-2036", tenor:10.0},
+{code:"FR0075",   type:"FR",   curr:"IDR", bid:99.50,  offer:102.00, yieldBid:7.55, yieldOffer:7.31, coupon:7.500,  issued:"08-08-2019", maturity:"15-05-2038", tenor:12.0},
+{code:"FR0076",   type:"FR",   curr:"IDR", bid:97.00,  offer:99.50,  yieldBid:7.63, yieldOffer:7.44, coupon:7.375,  issued:"05-08-2021", maturity:"15-05-2048", tenor:22.0},
+{code:"FR0079",   type:"FR",   curr:"IDR", bid:103.60, offer:106.10, yieldBid:7.55, yieldOffer:7.33, coupon:8.375,  issued:"24-01-2019", maturity:"15-04-2039", tenor:12.9},
+{code:"FR0083",   type:"FR",   curr:"IDR", bid:101.40, offer:103.90, yieldBid:7.53, yieldOffer:7.31, coupon:7.500,  issued:"12-08-2021", maturity:"15-04-2040", tenor:13.9},
+{code:"FR0089",   type:"FR",   curr:"IDR", bid:95.10,  offer:97.60,  yieldBid:7.30, yieldOffer:7.11, coupon:6.875,  issued:"22-07-2021", maturity:"15-08-2051", tenor:25.2},
+{code:"FR0093",   type:"FR",   curr:"IDR", bid:98.75,  offer:101.25, yieldBid:7.22, yieldOffer:6.96, coupon:7.000,  issued:"04-05-2023", maturity:"15-07-2037", tenor:11.2},
+{code:"FR0102",   type:"FR",   curr:"IDR", bid:90.00,  offer:92.50,  yieldBid:7.38, yieldOffer:7.22, coupon:6.500,  issued:"29-02-2024", maturity:"15-07-2054", tenor:28.2},
+{code:"FR0105",   type:"FR",   curr:"IDR", bid:92.50,  offer:95.00,  yieldBid:7.60, yieldOffer:7.46, coupon:7.000,  issued:"08-08-2024", maturity:"15-07-2064", tenor:38.2},
+{code:"PBS036",   type:"PBS",  curr:"IDR", bid:100.50, offer:103.00, yieldBid:7.40, yieldOffer:7.15, coupon:7.500,  issued:"19-08-2021", maturity:"15-08-2038", tenor:12.2},
+{code:"PBS043",   type:"PBS",  curr:"IDR", bid:96.80,  offer:99.30,  yieldBid:7.42, yieldOffer:7.19, coupon:7.125,  issued:"06-02-2025", maturity:"15-08-2045", tenor:19.2},
+// ── CCY: USD | INDON series ──
+{code:"INDON4.75 2029",  type:"INDON", curr:"USD", bid:97.35,  offer:98.85,  yieldBid:5.40, yieldOffer:4.90, coupon:4.750, issued:"11-12-2018", maturity:"11-02-2029", tenor:2.7},
+{code:"INDON3.05 2030",  type:"INDON", curr:"USD", bid:89.85,  offer:91.35,  yieldBid:5.45, yieldOffer:4.99, coupon:3.050, issued:"12-01-2021", maturity:"12-01-2030", tenor:3.7},
+{code:"INDON5.25 2030",  type:"INDON", curr:"USD", bid:98.35,  offer:99.85,  yieldBid:5.48, yieldOffer:5.02, coupon:5.250, issued:"08-01-2025", maturity:"08-01-2030", tenor:3.6},
+{code:"INDON3.55 2032",  type:"INDON", curr:"USD", bid:88.90,  offer:90.40,  yieldBid:5.65, yieldOffer:5.22, coupon:3.550, issued:"28-01-2020", maturity:"28-01-2032", tenor:5.7},
+{code:"INDON4.20 2033",  type:"INDON", curr:"USD", bid:91.50,  offer:93.00,  yieldBid:5.58, yieldOffer:5.18, coupon:4.200, issued:"17-11-2022", maturity:"15-11-2033", tenor:7.5},
+{code:"INDON5.65 2034",  type:"INDON", curr:"USD", bid:99.25,  offer:100.75, yieldBid:5.72, yieldOffer:5.34, coupon:5.650, issued:"05-01-2024", maturity:"05-01-2034", tenor:7.6},
+{code:"INDON5.10 2035",  type:"INDON", curr:"USD", bid:96.50,  offer:98.00,  yieldBid:5.63, yieldOffer:5.28, coupon:5.100, issued:"25-07-2025", maturity:"25-07-2035", tenor:9.2},
+{code:"INDON6.75 2038",  type:"INDON", curr:"USD", bid:107.00, offer:108.50, yieldBid:5.88, yieldOffer:5.58, coupon:6.750, issued:"22-01-2009", maturity:"15-01-2038", tenor:11.7},
+{code:"INDON4.35 2040",  type:"INDON", curr:"USD", bid:84.50,  offer:86.00,  yieldBid:5.78, yieldOffer:5.48, coupon:4.350, issued:"08-01-2020", maturity:"08-01-2040", tenor:13.6},
+{code:"INDON5.45 2041",  type:"INDON", curr:"USD", bid:95.50,  offer:97.00,  yieldBid:5.85, yieldOffer:5.57, coupon:5.450, issued:"16-09-2021", maturity:"16-09-2041", tenor:15.3},
+{code:"INDON4.55 2042",  type:"INDON", curr:"USD", bid:84.75,  offer:86.25,  yieldBid:5.88, yieldOffer:5.62, coupon:4.550, issued:"28-01-2020", maturity:"28-01-2042", tenor:15.7},
+{code:"INDON5.95 2045",  type:"INDON", curr:"USD", bid:99.50,  offer:101.00, yieldBid:5.99, yieldOffer:5.75, coupon:5.950, issued:"08-01-2025", maturity:"08-01-2045", tenor:18.6},
+{code:"INDON3.95 2047",  type:"INDON", curr:"USD", bid:73.50,  offer:75.00,  yieldBid:6.15, yieldOffer:5.94, coupon:3.950, issued:"20-01-2017", maturity:"20-01-2047", tenor:20.7},
+{code:"INDON4.45 2054",  type:"INDON", curr:"USD", bid:79.00,  offer:80.50,  yieldBid:6.12, yieldOffer:5.94, coupon:4.450, issued:"14-04-2023", maturity:"14-04-2054", tenor:28.0},
+{code:"INDON4.10 2054",  type:"INDON", curr:"USD", bid:75.25,  offer:76.75,  yieldBid:6.18, yieldOffer:6.02, coupon:4.100, issued:"05-01-2024", maturity:"05-01-2054", tenor:27.6},
+// ── CCY: USD | INDOIS (Sukuk USD) ──
+{code:"INDOIS3.80 2031",  type:"INDOIS",curr:"USD", bid:91.50,  offer:93.00,  yieldBid:5.30, yieldOffer:4.95, coupon:3.800, issued:"01-10-2020", maturity:"01-10-2031", tenor:5.4},
+{code:"INDOIS4.55 2033",  type:"INDOIS",curr:"USD", bid:92.85,  offer:94.35,  yieldBid:5.48, yieldOffer:5.14, coupon:4.550, issued:"18-11-2022", maturity:"18-11-2033", tenor:7.5},
+{code:"INDOIS4.70 2038",  type:"INDOIS",curr:"USD", bid:88.00,  offer:89.50,  yieldBid:5.82, yieldOffer:5.56, coupon:4.700, issued:"18-11-2022", maturity:"18-11-2038", tenor:12.5},
+{code:"INDOIS5.00 2040",  type:"INDOIS",curr:"USD", bid:90.50,  offer:92.00,  yieldBid:5.78, yieldOffer:5.52, coupon:5.000, issued:"01-10-2020", maturity:"01-10-2040", tenor:14.4},
+];
+
+function addNoise(){BONDS_RAW.forEach(b=>{b._n=b._n||0;b._n+=+(Math.random()-.5)*.04;b._n=Math.max(-.5,Math.min(.5,b._n));b.bid=+(b.bid+b._n*.5).toFixed(2);b.offer=+(b.offer+b._n*.5).toFixed(2)});}
+
+let alerts=JSON.parse(localStorage.getItem('alerts2')||'[]');
+let activeTab='all';
+
+// ── INIT ──
+buildDl();
+render();
+updateMetrics();
+document.getElementById('lastUpd').textContent='Update: '+new Date().toLocaleTimeString('id-ID');
+setInterval(()=>{addNoise();render();updateMetrics();document.getElementById('lastUpd').textContent='Update: '+new Date().toLocaleTimeString('id-ID')},30000);
+
+function buildDl(){
+  const h=BONDS_RAW.map(b=>`<option value="${b.code}">`).join('');
+  document.getElementById('bondDl').innerHTML=h;
+}
+
+function savePersist(){localStorage.setItem('alerts2',JSON.stringify(alerts));}
+
+function isTriggered(a){
+  const b=BONDS_RAW.find(x=>x.code===a.code);
+  if(!b)return false;
+  return a.cond==='above'?b.bid>=a.target:b.bid<=a.target;
+}
+
+// ── TABS ──
+function setTab(tab){
+  activeTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('active');
+  render();
+}
+
+// ── RENDER ──
+function render(){
+  const tbody=document.getElementById('alertBody');
+  const empty=document.getElementById('alertEmpty');
+
+  const filtered=alerts.filter(a=>{
+    if(activeTab==='all')return true;
+    const hit=isTriggered(a);
+    return activeTab==='triggered'?hit:!hit;
+  });
+
+  if(!filtered.length){tbody.innerHTML='';empty.style.display='';return;}
+  empty.style.display='none';
+
+  tbody.innerHTML=filtered.map((a,i)=>{
+    const realIdx=alerts.indexOf(a);
+    const b=BONDS_RAW.find(x=>x.code===a.code);
+    const hit=isTriggered(a);
+    const curBid=b?b.bid:0;
+    const gap=b?(a.cond==='above'?a.target-curBid:curBid-a.target):0;
+    const gapSign=gap<=0?'+':'-';
+    const gapCls=gap<=0?'pos':'neg';
+    const condLbl=a.cond==='above'?'↑ Naik ≥':'↓ Turun ≤';
+    const ccy=b?b.curr:'IDR';
+    const type=b?b.type:'—';
+    const maturity=b?b.maturity:'—';
+    const coupon=b?b.coupon.toFixed(3)+'%':'—';
+    return `<tr>
+      <td><span class="bond-code">${a.code}</span></td>
+      <td><span class="badge b-${type.toLowerCase()}">${type}</span></td>
+      <td><span class="c-${ccy.toLowerCase()}">${ccy}</span></td>
+      <td style="font-weight:600">${condLbl}</td>
+      <td class="mono" style="text-align:right;font-weight:700">${a.target.toFixed(2)}</td>
+      <td class="mono" style="text-align:right">${curBid.toFixed(2)}</td>
+      <td style="text-align:right"><span class="gap ${gapCls}">${gapSign}${Math.abs(gap).toFixed(2)}</span></td>
+      <td>${hit?'<span class="status-hit">🔔 Triggered</span>':'<span class="status-watch">👁 Watching</span>'}</td>
+      <td class="mono">${coupon}</td>
+      <td class="mono" style="font-size:11px">${maturity}</td>
+      <td style="text-align:center"><button class="btn btn-reset btn-sm" onclick="delAlert(${realIdx})">✕</button></td>
+    </tr>`;
+  }).join('');
+
+  updateBadges();
+}
+
+// ── METRICS ──
+function updateMetrics(){
+  const total=alerts.length;
+  const triggered=alerts.filter(a=>isTriggered(a)).length;
+  const watching=total-triggered;
+  const idrCnt=alerts.filter(a=>{const b=BONDS_RAW.find(x=>x.code===a.code);return b&&b.curr==='IDR';}).length;
+  const usdCnt=alerts.filter(a=>{const b=BONDS_RAW.find(x=>x.code===a.code);return b&&b.curr==='USD';}).length;
+  document.getElementById('mTotal').textContent=total;
+  document.getElementById('mTriggered').textContent=triggered;
+  document.getElementById('mWatching').textContent=watching;
+  document.getElementById('mIDR').textContent=idrCnt;
+  document.getElementById('mUSD').textContent=usdCnt;
+}
+
+function updateBadges(){
+  const total=alerts.length;
+  const triggered=alerts.filter(a=>isTriggered(a)).length;
+  document.getElementById('badgeAll').textContent=total;
+  document.getElementById('badgeTriggered').textContent=triggered;
+  document.getElementById('badgeWatching').textContent=total-triggered;
+}
+
+// ── MODAL ──
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');if(id==='alertMod')resetAlertForm();}
+
+function resetAlertForm(){
+  document.getElementById('aCode').value='';
+  document.getElementById('aTarget').value='';
+  document.getElementById('aCond').value='above';
+  document.getElementById('aBondInfo').style.display='none';
+}
+
+function onAlertCodeInput(){
+  const code=document.getElementById('aCode').value.trim().toUpperCase();
+  const b=BONDS_RAW.find(x=>x.code===code);
+  const info=document.getElementById('aBondInfo');
+  if(b){
+    info.style.display='block';
+    info.innerHTML=`<strong>${b.code}</strong> · ${b.type} · ${b.curr}<br>Kupon: <strong>${b.coupon}%</strong> · Bid Saat Ini: <strong>${b.bid}</strong> · Jatuh Tempo: <strong>${b.maturity}</strong>`;
+  }else{info.style.display='none';}
+}
+
+function saveAlert(){
+  const code=document.getElementById('aCode').value.trim().toUpperCase();
+  const cond=document.getElementById('aCond').value;
+  const target=parseFloat(document.getElementById('aTarget').value);
+  if(!code||!BONDS_RAW.find(x=>x.code===code)){toast('Kode obligasi tidak valid','t-warn');return;}
+  if(!target||target<=0){toast('Harga target tidak valid','t-warn');return;}
+  alerts.push({code,cond,target});
+  savePersist();
+  render();
+  updateMetrics();
+  closeModal('alertMod');
+  toast('Alert ditambahkan','t-ok');
+}
+
+function delAlert(idx){
+  alerts.splice(idx,1);
+  savePersist();
+  render();
+  updateMetrics();
+  toast('Alert dihapus','t-warn');
+}
+
+// ── TOAST ──
+function toast(msg,cls='t-info'){
+  const c=document.getElementById('toast-container');
+  const t=document.createElement('div');
+  t.className='toast '+cls;t.textContent=msg;
+  c.appendChild(t);setTimeout(()=>t.remove(),3200);
+}
+</script>
+</body>
+</html>
