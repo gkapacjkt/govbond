@@ -31,7 +31,8 @@ body{font-family:'Sora',sans-serif;background:var(--ink);color:var(--text);min-h
 .last-upd{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace}
 
 /* BUTTONS */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r);cursor:pointer;font-size:12px;font-weight:600;font-family:'Sora',sans-serif;border:1px solid transparent;transition:all .2s;line-height:1;background:none}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r);cursor:pointer;font-size:12px;font-weight:600;font-family:'Sora',sans-serif;border:1px solid transparent;transition:all .2s;line-height:1;background:none;text-decoration:none}
+.hdr-nav.active{background:rgba(88,166,255,.12);color:var(--blue);border-color:rgba(88,166,255,.25)}
 .btn-blue{background:var(--blue);color:#0d1117;border-color:var(--blue)}
 .btn-blue:hover{background:#79bfff}
 .btn-ghost{color:var(--text2);border-color:var(--border2)}
@@ -127,17 +128,16 @@ tbody tr:hover{background:var(--surface2)}
 <body>
 
 <header class="header">
-  <div style="display:flex;align-items:center;gap:16px">
+  <div style="display:flex;align-items:center;gap:14px">
     <a class="logo" href="govbond.html">Porto<em>Track</em> <span style="font-size:10px;color:var(--text3);font-weight:400">by MEMZO.DEV</span></a>
-    <nav class="nav-links">
-      <a class="nav-link" href="govbond.html">📊 Bonds</a>
-      <a class="nav-link" href="dashboard.html">📦 Portfolio</a>
-      <a class="nav-link active" href="alert.html">🔔 Alerts</a>
-    </nav>
   </div>
   <div class="hdr-right">
     <span class="last-upd" id="lastUpd">—</span>
+    <a class="btn btn-ghost btn-sm hdr-nav" href="govbond.html">📊 Bonds</a>
+    <a class="btn btn-ghost btn-sm hdr-nav" href="index.html">📦 Portfolio</a>
+    <a class="btn btn-ghost btn-sm hdr-nav active" href="alert.html">🔔 Alert</a>
     <button class="btn btn-blue" onclick="openModal('alertMod')">+ Tambah Alert</button>
+    <button class="btn btn-ghost btn-sm" style="visibility:hidden">💾 Data</button>
   </div>
 </header>
 
